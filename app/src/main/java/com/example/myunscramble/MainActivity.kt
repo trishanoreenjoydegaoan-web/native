@@ -6,8 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,15 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myunscramble.ui.theme.MyUnscrambleTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyUnscrambleTheme {
+            UnscrambleTheme {
                 GameScreen()
             }
         }
@@ -34,52 +32,81 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun UnscrambleTheme(content: @Composable () -> Unit) {
+    MaterialTheme(content = content)
+}
+
+@Composable
 fun GameScreen() {
-    // Step 2 — State variable to remember what the user types
+    // --- Phase 2: State variable for user input ---
     var userAnswer by remember { mutableStateOf("") }
 
+    // --- Phase 4 & 5: Word list, index, scrambled word ---
+    val words = listOf(
+        "CAT",
+        "DOG",
+        "BOOK"
+    )
+    var currentWordIndex by remember { mutableStateOf(0) }
+    val correctAnswer = words[currentWordIndex]
+    var scrambledWord by remember {
+        mutableStateOf(
+            words[0].toList().shuffled().joinToString("")
+        )
+    }
+
+    // --- Phase 3: Score state ---
+    var score by remember { mutableStateOf(0) }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = "UNSCRAMBLE",
-            fontSize = 30.sp,
-            modifier = Modifier.padding(bottom = 32.dp)
+            fontSize = 30.sp
+        )
+
+        // --- Phase 5: Show scrambled word instead of answer ---
+        Text(
+            text = scrambledWord,
+            fontSize = 40.sp
         )
 
         Text(
-            text = "TAC",
-            fontSize = 40.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
+            text = "Unscramble the word!"
         )
 
-        Text(
-            text = "Unscramble the word!",
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
-        // Step 4 — Connect state to TextField
+        // --- Phase 2: Connect TextField to state ---
         OutlinedTextField(
             value = userAnswer,
             onValueChange = { userAnswer = it },
-            label = { Text("Enter your answer") },
-            modifier = Modifier.padding(bottom = 24.dp)
+            label = { Text("Enter your answer") }
         )
 
+        // --- Phase 3 & 4: Check answer, update score & move to next word ---
         Button(
-            onClick = { /* Does nothing yet — Phase 3 */ },
-            modifier = Modifier.padding(bottom = 24.dp)
+            onClick = {
+                if (userAnswer.uppercase() == correctAnswer) {
+                    score++
+                    if (currentWordIndex < words.size - 1) {
+                        currentWordIndex++
+                        userAnswer = ""
+                        scrambledWord = words[currentWordIndex]
+                            .toList()
+                            .shuffled()
+                            .joinToString("")
+                    }
+                }
+            }
         ) {
-            Text("SUBMIT", fontSize = 18.sp)
+            Text("SUBMIT")
         }
 
+        // --- Phase 3: Show live score ---
         Text(
-            text = "Score: 0",
-            fontSize = 20.sp
+            text = "Score: $score"
         )
     }
 }
@@ -87,7 +114,7 @@ fun GameScreen() {
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-    MyUnscrambleTheme {
+    UnscrambleTheme {
         GameScreen()
     }
 }
